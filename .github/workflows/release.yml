@@ -84,6 +84,6 @@ jobs:
             Download the APK file below and install it on your Android device.
 
             **Full Changelog**: https://github.com/${{ github.repository }}/compare/v${{ steps.get_version.outputs.VERSION }}...HEAD
-          artifacts: app/build/outputs/apk/release/app-v${{ steps.get_version.outputs.VERSION }}.apk
+          artifacts: app/build/outputs/apk/release/waiotech-v${{ steps.get_version.outputs.VERSION }}.apk
           artifactContentType: application/vnd.android.package-archive
           token: ${{ github.token }}
