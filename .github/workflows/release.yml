@@ -60,33 +60,23 @@ jobs:
     - name: Rename APK
       run: |
         mv app/build/outputs/apk/release/app-release*.apk app/build/outputs/apk/release/app-v${{ steps.get_version.outputs.VERSION }}.apk
-        
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Create GitHub Release & upload APK
+      uses: ncipollo/release-action@v1
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ steps.get_version.outputs.VERSION }}
+        tag: ${{ github.ref_name }}                    # e.g. v1.2.3
+        name: Release ${{ steps.get_version.outputs.VERSION }}
         draft: false
         prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
         body: |
           ## What's Changed
-          
+
           Release version ${{ steps.get_version.outputs.VERSION }}
-          
+
           ### Installation
           Download the APK file below and install it on your Android device.
-          
+
           **Full Changelog**: https://github.com/${{ github.repository }}/compare/v${{ steps.get_version.outputs.VERSION }}...HEAD
-          
-    - name: Upload Release APK
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: app/build/outputs/apk/release/app-v${{ steps.get_version.outputs.VERSION }}.apk
-        asset_name: waiotech-v${{ steps.get_version.outputs.VERSION }}.apk
-        asset_content_type: application/vnd.android.package-archive
+        artifacts: app/build/outputs/apk/release/app-v${{ steps.get_version.outputs.VERSION }}.apk
+        artifactContentType: application/vnd.android.package-archive
+        token: ${{ secrets.GITHUB_TOKEN }} 
