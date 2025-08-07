@@ -23,7 +23,7 @@ jobs:
         distribution: 'temurin'
         
     - name: Cache Gradle packages
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           ~/.gradle/caches
@@ -45,20 +45,23 @@ jobs:
     - name: Run tests
       run: ./gradlew test
       
-    - name: Build release APK
-      run: ./gradlew assembleRelease
-      
-    - name: Sign APK (if keystore secrets are available)
-      if: ${{ secrets.KEYSTORE_FILE != '' }}
+    - name: Build and Sign Release APK
+      id: sign_apk
       run: |
-        echo "${{ secrets.KEYSTORE_FILE }}" | base64 -d > keystore.jks
-        ./gradlew assembleRelease \
-          -Pandroid.injected.signing.store.file=keystore.jks \
-          -Pandroid.injected.signing.store.password="${{ secrets.KEYSTORE_PASSWORD }}" \
-          -Pandroid.injected.signing.key.alias="${{ secrets.KEY_ALIAS }}" \
-          -Pandroid.injected.signing.key.password="${{ secrets.KEY_PASSWORD }}"
-      env:
-        KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
+        if [[ -n "${{ secrets.KEYSTORE_FILE }}" ]]; then
+          echo "Signing APK..."
+          echo "${{ secrets.KEYSTORE_FILE }}" | base64 -d > app/keystore.jks
+          ./gradlew assembleRelease \
+            -Pandroid.injected.signing.store.file=keystore.jks \
+            -Pandroid.injected.signing.store.password="${{ secrets.KEYSTORE_PASSWORD }}" \
+            -Pandroid.injected.signing.key.alias="${{ secrets.KEY_ALIAS }}" \
+            -Pandroid.injected.signing.key.password="${{ secrets.KEY_PASSWORD }}"
+          echo "SIGNED=true" >> $GITHUB_OUTPUT
+        else
+          echo "Signing secrets not found, building unsigned APK..."
+          ./gradlew assembleRelease
+          echo "SIGNED=false" >> $GITHUB_OUTPUT
+        fi
         
     - name: Rename APK
       run: |
@@ -67,7 +70,6 @@ jobs:
     - name: Create GitHub Release & upload APK
       uses: ncipollo/release-action@v1
       with:
-        token: ${{ github.token }}
         tag: ${{ github.ref_name }}                    # e.g. v1.2.3
         name: Release ${{ steps.get_version.outputs.VERSION }}
         draft: false
@@ -83,3 +85,4 @@ jobs:
           **Full Changelog**: https://github.com/${{ github.repository }}/compare/v${{ steps.get_version.outputs.VERSION }}...HEAD
         artifacts: app/build/outputs/apk/release/app-v${{ steps.get_version.outputs.VERSION }}.apk
         artifactContentType: application/vnd.android.package-archive
+        token: ${{ github.token }}
