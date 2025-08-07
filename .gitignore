@@ -1,16 +1,25 @@
-# Compiled class file
-*.class
-
-# Log file
+# Android
+.gradle/
+build/
+**/build/
+!src/**/build/
+local.properties
 *.log
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+output.json
+*.jks
+*.keystore
+google-services.json
+*.hprof
+gen-external-apklibs
 
-# BlueJ files
+# Kotlin/Java
+*.class
 *.ctxt
-
-# Mobile Tools for Java (J2ME)
 .mtj.tmp/
-
-# Package Files #
 *.jar
 *.war
 *.nar
@@ -19,9 +28,26 @@
 *.tar.gz
 *.rar
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+# JVM crash logs
 hs_err_pid*
 replay_pid*
 
-# Kotlin Gradle plugin data, see https://kotlinlang.org/docs/whatsnew20.html#new-directory-for-kotlin-data-in-gradle-projects
-.kotlin/
+# IntelliJ / Android Studio
+*.iml
+.idea/
+misc.xml
+deploymentTargetDropDown.xml
+render.experimental.xml
+
+# Gradle wrapper (keep these!)
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# Gradle config
+gradle-app.setting
+.gradletasknamecache
+
+# Eclipse
+.project
+.classpath
+
