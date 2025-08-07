@@ -66,7 +66,7 @@ jobs:
 
       - name: Rename APK
         run: |
-          mv app/build/outputs/apk/release/app-release*.apk app/build/outputs/apk/release/app-v${{ steps.get_version.outputs.VERSION }}.apk
+          mv app/build/outputs/apk/release/app-release*.apk app/build/outputs/apk/release/waiotech-v${{ steps.get_version.outputs.VERSION }}.apk
 
       - name: Create GitHub Release & upload APK
         uses: ncipollo/release-action@v1
