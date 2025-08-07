@@ -67,13 +67,22 @@ jobs:
       run: |
         mv app/build/outputs/apk/release/app-release*.apk app/build/outputs/apk/release/app-v${{ steps.get_version.outputs.VERSION }}.apk
 
-    - name: Create GitHub Release
+    - name: Create GitHub Release & upload APK
       uses: ncipollo/release-action@v1
       with:
-        tag: ${{ github.ref_name }}
-        name: Release ${{ github.ref_name }}
-        generateReleaseNotes: true
+        tag: ${{ github.ref_name }}                    # e.g. v1.2.3
+        name: Release ${{ steps.get_version.outputs.VERSION }}
+        draft: false
         prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
+        body: |
+          ## What's Changed
+
+          Release version ${{ steps.get_version.outputs.VERSION }}
+
+          ### Installation
+          Download the APK file below and install it on your Android device.
+
+          **Full Changelog**: https://github.com/${{ github.repository }}/compare/v${{ steps.get_version.outputs.VERSION }}...HEAD
         artifacts: app/build/outputs/apk/release/app-v${{ steps.get_version.outputs.VERSION }}.apk
         artifactContentType: application/vnd.android.package-archive
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ github.token }}
