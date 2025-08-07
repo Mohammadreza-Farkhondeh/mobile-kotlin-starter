@@ -49,7 +49,7 @@ jobs:
       run: ./gradlew assembleRelease
       
     - name: Sign APK (if keystore secrets are available)
-      if: ${{ env.KEYSTORE_FILE != '' }}
+      if: ${{ secrets.KEYSTORE_FILE != '' }}
       run: |
         echo "${{ secrets.KEYSTORE_FILE }}" | base64 -d > keystore.jks
         ./gradlew assembleRelease \
@@ -83,4 +83,3 @@ jobs:
           **Full Changelog**: https://github.com/${{ github.repository }}/compare/v${{ steps.get_version.outputs.VERSION }}...HEAD
         artifacts: app/build/outputs/apk/release/app-v${{ steps.get_version.outputs.VERSION }}.apk
         artifactContentType: application/vnd.android.package-archive
-        token: ${{ secrets.GITHUB_TOKEN }} 
