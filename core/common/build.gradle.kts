@@ -1,11 +1,26 @@
 plugins {
-    alias(libs.plugins.kotlin.jvm)
+    id("com.android.library")
+    alias(libs.plugins.kotlin.android)
+}
+
+android {
+    namespace = "com.waiotech.android.core.common"
+    compileSdk = 36
+
+    defaultConfig {
+        minSdk = 24
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
+    }
+    kotlinOptions {
+        jvmTarget = "21"
+    }
 }
 
 dependencies {
-    // Common utilities and extensions will be added here
-}
-
-kotlin {
-    jvmToolchain(21)
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.datastore.preferences)
 }
