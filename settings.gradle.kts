@@ -20,7 +20,10 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "WAIOTECH"
+
 include(":app")
+
 include(":core:common")
 include(":core:ui")
 
+include(":feature:onboarding")
