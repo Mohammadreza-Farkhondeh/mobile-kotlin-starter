@@ -63,6 +63,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
 
     implementation(project(":core:ui"))
+    implementation(project(":feature:onboarding"))
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
