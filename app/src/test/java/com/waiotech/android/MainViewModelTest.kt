@@ -43,10 +43,9 @@ class OnboardingViewModelTest {
     @Test
     fun `onGetStartedClick sets first run to false`() =
         runTest {
-            // When
             viewModel.onGetStartedClick()
+            testDispatcher.scheduler.advanceUntilIdle()
 
-            // Then
             verify(firstRunRepository).setFirstRun(false)
             verifyNoMoreInteractions(firstRunRepository)
         }
@@ -62,11 +61,10 @@ class OnboardingViewModelTest {
     @Test
     fun `multiple onGetStartedClick calls each set first run to false`() =
         runTest {
-            // When
             viewModel.onGetStartedClick()
             viewModel.onGetStartedClick()
+            testDispatcher.scheduler.advanceUntilIdle()
 
-            // Then
             verify(firstRunRepository, times(2)).setFirstRun(false)
         }
 }

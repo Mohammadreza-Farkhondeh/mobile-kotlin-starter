@@ -45,6 +45,7 @@ class OnboardingViewModelTest {
         runTest {
             // When
             viewModel.onGetStartedClick()
+            testDispatcher.scheduler.advanceUntilIdle()
 
             // Then
             verify(firstRunRepository).setFirstRun(false)
@@ -65,6 +66,7 @@ class OnboardingViewModelTest {
             // When
             viewModel.onGetStartedClick()
             viewModel.onGetStartedClick()
+            testDispatcher.scheduler.advanceUntilIdle()
 
             // Then
             verify(firstRunRepository, times(2)).setFirstRun(false)
