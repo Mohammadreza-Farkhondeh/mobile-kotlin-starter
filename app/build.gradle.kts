@@ -71,6 +71,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.compose)
 
+    implementation(project(":core:common"))
     implementation(project(":core:ui"))
     implementation(project(":feature:onboarding"))
     implementation(project(":feature:home"))

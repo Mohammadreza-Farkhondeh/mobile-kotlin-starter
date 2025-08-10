@@ -1,7 +1,7 @@
 [versions]
 # Build tools (fixed as per requirements)
 gradleWrapper = "8.13"
-agp = "8.11"
+agp = "8.11.1"
 kotlin = "2.0.21"
 ksp = "2.0.21-1.0.25"
 
