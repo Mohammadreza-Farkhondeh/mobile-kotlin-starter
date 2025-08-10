@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.waiotech.android.feature.onboarding"
+    namespace = "com.waiotech.android.feature.home"
     compileSdk =
         libs.versions.compileSdk
             .get()
@@ -18,7 +18,6 @@ android {
             libs.versions.minSdk
                 .get()
                 .toInt()
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
@@ -30,28 +29,16 @@ android {
     buildFeatures {
         compose = true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
-    }
 }
 
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.material3)
-    implementation(project(":core:common"))
-    implementation(project(":core:ui"))
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-
-    implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-
-    testImplementation(libs.mockito.kotlin)
-    testImplementation(libs.kotlinx.coroutines.test)
+    implementation(project(":core:ui"))
 }

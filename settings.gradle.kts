@@ -27,3 +27,4 @@ include(":core:common")
 include(":core:ui")
 
 include(":feature:onboarding")
+include(":feature:home")

@@ -1,9 +1,14 @@
-name: Release Build
+name: Release
 
 on:
   push:
     tags:
-      - "v*"
+      - 'v*'
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -11,79 +16,87 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: "21"
-          distribution: "temurin"
+          java-version: '21'
+          distribution: 'temurin'
 
-      - name: Cache Gradle packages
-        uses: actions/cache@v4
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
+          gradle-home-cache-cleanup: true
 
-      - name: Setup Gradle Wrapper
+      - name: Validate Gradle Wrapper
         uses: gradle/actions/wrapper-validation@v3
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
-
       - name: Extract version from tag
-        id: get_version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+        id: ver
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
 
-      - name: Run tests
-        run: ./gradlew test
-
-      - name: Build and Sign Release APK
-        id: sign_apk
+      - name: Test (release)
         run: |
-          if [[ -n "${{ secrets.KEYSTORE_FILE }}" ]]; then
-            echo "Signing APK..."
-            echo "${{ secrets.KEYSTORE_FILE }}" | base64 -d > app/keystore.jks
+          ./gradlew \
+            testReleaseUnitTest \
+            -Dorg.gradle.caching=true \
+            -Dorg.gradle.configuration-cache=true \
+            --build-cache \
+            --parallel \
+            --stacktrace
+
+      - name: Build & sign Release APK
+        id: build
+        env:
+          KEYSTORE_FILE_B64: ${{ secrets.KEYSTORE_FILE }}
+          KEYSTORE_PASSWORD:  ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS:          ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD:       ${{ secrets.KEY_PASSWORD }}
+        run: |
+          SIGNED=false
+          if [[ -n "$KEYSTORE_FILE_B64" ]]; then
+            echo "$KEYSTORE_FILE_B64" | base64 -d > app/keystore.jks
             KEYPATH="$GITHUB_WORKSPACE/app/keystore.jks"
-            ./gradlew assembleRelease \
-              -Pandroid.injected.signing.store.file=$KEYPATH \
-              -Pandroid.injected.signing.store.password="${{ secrets.KEYSTORE_PASSWORD }}" \
-              -Pandroid.injected.signing.key.alias="${{ secrets.KEY_ALIAS }}" \
-              -Pandroid.injected.signing.key.password="${{ secrets.KEY_PASSWORD }}"
-            echo "SIGNED=true" >> $GITHUB_OUTPUT
-          else
-            echo "Signing secrets not found, building unsigned APK..."
-            ./gradlew assembleRelease
-            echo "SIGNED=false" >> $GITHUB_OUTPUT
+            SIGNED=true
+            SIGNING_PROPS="-Pandroid.injected.signing.store.file=$KEYPATH \
+                           -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
+                           -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
+                           -Pandroid.injected.signing.key.password=$KEY_PASSWORD"
           fi
+
+          ./gradlew \
+            assembleRelease \
+            -Dorg.gradle.caching=true \
+            -Dorg.gradle.configuration-cache=true \
+            --build-cache \
+            --parallel \
+            --stacktrace \
+            ${SIGNING_PROPS:-}
+
+          echo "SIGNED=$SIGNED" >> "$GITHUB_OUTPUT"
 
       - name: Rename APK
         run: |
-          mv app/build/outputs/apk/release/app-release*.apk app/build/outputs/apk/release/waiotech-v${{ steps.get_version.outputs.VERSION }}.apk
+          mkdir -p dist
+          mv app/build/outputs/apk/release/app-release*.apk "dist/waiotech-v${{ steps.ver.outputs.VERSION }}.apk"
 
       - name: Create GitHub Release & upload APK
         uses: ncipollo/release-action@v1
         with:
-          tag: ${{ github.ref_name }} # e.g. v1.2.3
-          name: Release ${{ steps.get_version.outputs.VERSION }}
+          tag: ${{ github.ref_name }}
+          name: Release ${{ steps.ver.outputs.VERSION }}
           draft: false
-          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
+          prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
           body: |
-            ## What's Changed
+            Tag: v${{ steps.ver.outputs.VERSION }}
 
-            Release version ${{ steps.get_version.outputs.VERSION }}
-
-            ### Installation
-            Download the APK file below and install it on your Android device.
-
-            **Full Changelog**: https://github.com/${{ github.repository }}/compare/v${{ steps.get_version.outputs.VERSION }}...HEAD
-          artifacts: app/build/outputs/apk/release/waiotech-v${{ steps.get_version.outputs.VERSION }}.apk
+            Download the APK below and install on your Android device.
+          artifacts: dist/waiotech-v${{ steps.ver.outputs.VERSION }}.apk
           artifactContentType: application/vnd.android.package-archive
-          token: ${{ github.token }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
