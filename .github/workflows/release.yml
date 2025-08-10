@@ -54,34 +54,37 @@ jobs:
 
       - name: Build & sign Release APK
         id: build
-        env:
-          KEYSTORE_FILE_B64: ${{ secrets.KEYSTORE_FILE }}
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           SIGNED=false
-          if [[ -n "$KEYSTORE_FILE_B64" ]]; then
-            echo "$KEYSTORE_FILE_B64" | base64 -d > app/keystore.jks
+          if [[ -n "${{ secrets.KEYSTORE_FILE }}" ]]; then
+            echo "Signing APK..."
+            echo "${{ secrets.KEYSTORE_FILE }}" | base64 -d > app/keystore.jks
             KEYPATH="$GITHUB_WORKSPACE/app/keystore.jks"
             SIGNED=true
-            SIGNING_PROPS="-Pandroid.injected.signing.store.file=$KEYPATH \
-                           -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
-                           -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
-                           -Pandroid.injected.signing.key.password=$KEY_PASSWORD"
+
+            ./gradlew \
+              assembleRelease \
+              -Pandroid.injected.signing.store.file="$KEYPATH" \
+              -Pandroid.injected.signing.store.password="${{ secrets.KEYSTORE_PASSWORD }}" \
+              -Pandroid.injected.signing.key.alias="${{ secrets.KEY_ALIAS }}" \
+              -Pandroid.injected.signing.key.password="${{ secrets.KEY_PASSWORD }}" \
+              -Dorg.gradle.caching=true \
+              -Dorg.gradle.configuration-cache=true \
+              --build-cache \
+              --parallel \
+              --stacktrace
+          else
+            echo "Signing secrets not found, building unsigned APK..."
+            ./gradlew \
+              assembleRelease \
+              -Dorg.gradle.caching=true \
+              -Dorg.gradle.configuration-cache=true \
+              --build-cache \
+              --parallel \
+              --stacktrace
           fi
 
-          ./gradlew \
-            assembleRelease \
-            -Dorg.gradle.caching=true \
-            -Dorg.gradle.configuration-cache=true \
-            --build-cache \
-            --parallel \
-            --stacktrace \
-            ${SIGNING_PROPS:-}
-
           echo "SIGNED=$SIGNED" >> "$GITHUB_OUTPUT"
-
       - name: Rename APK
         run: |
           mkdir -p dist
