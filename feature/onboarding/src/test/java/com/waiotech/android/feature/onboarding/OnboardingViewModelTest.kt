@@ -11,15 +11,22 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoMoreInteractions
 
+/**
+ * Unit tests for OnboardingViewModel.
+ *
+ * These tests verify that the onboarding flow correctly manages the first run state
+ * and properly coordinates with the FirstRunRepository.
+ */
 @ExperimentalCoroutinesApi
 class OnboardingViewModelTest {
-
-    private val testDispatcher = StandardTestDispatcher()
-
     private lateinit var viewModel: OnboardingViewModel
     private lateinit var firstRunRepository: FirstRunRepository
+
+    private val testDispatcher = StandardTestDispatcher()
 
     @Before
     fun setUp() {
@@ -34,8 +41,32 @@ class OnboardingViewModelTest {
     }
 
     @Test
-    fun `onGetStartedClick sets first run to false`() = runTest {
-        viewModel.onGetStartedClick()
-        verify(firstRunRepository).setFirstRun(false)
+    fun `onGetStartedClick sets first run to false`() =
+        runTest {
+            // When
+            viewModel.onGetStartedClick()
+
+            // Then
+            verify(firstRunRepository).setFirstRun(false)
+            verifyNoMoreInteractions(firstRunRepository)
+        }
+
+    @Test
+    fun `viewModel does not interact with repository until onGetStartedClick is called`() {
+        // Given - ViewModel is created in setUp()
+
+        // Then - No interactions should have occurred yet
+        verifyNoMoreInteractions(firstRunRepository)
     }
+
+    @Test
+    fun `multiple onGetStartedClick calls each set first run to false`() =
+        runTest {
+            // When
+            viewModel.onGetStartedClick()
+            viewModel.onGetStartedClick()
+
+            // Then
+            verify(firstRunRepository, times(2)).setFirstRun(false)
+        }
 }
