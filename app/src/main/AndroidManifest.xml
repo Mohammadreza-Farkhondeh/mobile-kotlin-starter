@@ -3,9 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <application
-        android:icon="@android:drawable/sym_def_app_icon"
-        android:label="WAIOTECH"
-        android:roundIcon="@android:drawable/sym_def_app_icon"
+    android:label="WAIOTECH"
+    android:icon="@mipmap/ic_launcher"
+    android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.DeviceDefault">
 
